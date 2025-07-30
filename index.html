@@ -1,9 +1,49 @@
-<!DOCTYPE html>
-<!-- saved from url=(0056)file:///C:/Users/sandeep.d/Desktop/galaxyfy_website.html -->
-<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Galaxyfy 9 Solutions - IT Services &amp; Digital Transformation</title>
+    <title>Galaxyfy 9 Solutions - IT Services & Digital Transformation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -79,6 +119,15 @@
 
         .nav-links a:hover::after {
             width: 100%;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #333;
         }
 
         /* Hero Section */
@@ -396,28 +445,40 @@
 
         /* Responsive Design */
         @media (max-width: 768px) {
+            .hamburger {
+                display: block;
+            }
             .nav-links {
                 display: none;
+                flex-direction: column;
+                position: absolute;
+                top: 60px;
+                left: 0;
+                width: 100%;
+                background: rgba(255, 255, 255, 0.95);
+                padding: 1rem;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
             }
-
+            .nav-links.active {
+                display: flex;
+            }
+            .nav-links li {
+                margin: 0.5rem 0;
+            }
             .hero-content {
                 grid-template-columns: 1fr;
                 text-align: center;
                 gap: 2rem;
             }
-
             .hero-text h1 {
                 font-size: 2.5rem;
             }
-
             .about-content {
                 grid-template-columns: 1fr;
             }
-
             .stats {
                 grid-template-columns: 1fr;
             }
-
             .visual-element {
                 width: 300px;
                 height: 300px;
@@ -445,11 +506,12 @@
     <header class="header" style="background: rgba(255, 255, 255, 0.95); box-shadow: none;">
         <nav class="nav">
             <div class="logo">Galaxyfy 9 Solutions</div>
+            <button class="hamburger" aria-label="Toggle navigation">☰</button>
             <ul class="nav-links">
-                <li><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#home">Home</a></li>
-                <li><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html">Services</a></li>
-                <li><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html">About</a></li>
-                <li><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html">Contact</a></li>
+                <li><a href="#home" aria-current="page">Home</a></li>
+                <li><a href="#services">Services</a></li>
+                <li><a href="#about">About</a></li>
+                <li><a href="#contact">Contact</a></li>
             </ul>
         </nav>
     </header>
@@ -461,10 +523,10 @@
                 <h1>Digital Transformation Redefined</h1>
                 <div class="subtitle">Innovative IT Solutions for Tomorrow's Challenges</div>
                 <p>Galaxyfy 9 Solutions leverages cutting-edge technologies and agile methodologies to deliver impactful business solutions that drive your digital transformation journey forward.</p>
-                <a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#services" class="cta-button">Explore Our Services</a>
+                <a href="#services" class="cta-button">Explore Our Services</a>
             </div>
             <div class="hero-visual">
-                <div class="visual-element">
+                <div class="visual-element" aria-hidden="true">
                     <div style="font-size: 4rem; opacity: 0.8;">🚀</div>
                 </div>
             </div>
@@ -479,22 +541,22 @@
                 <p>Comprehensive IT solutions tailored to accelerate your business growth</p>
             </div>
             <div class="services-grid">
-                <div class="service-card fade-in" style="opacity: 1; transform: translateY(0px); transition: 0.6s;">
+                <div class="service-card fade-in">
                     <div class="service-icon">💻</div>
                     <h3>Custom Software Development</h3>
                     <p>Tailored software solutions built with modern technologies to meet your unique business requirements and drive operational efficiency.</p>
                 </div>
-                <div class="service-card fade-in" style="opacity: 1; transform: translateY(0px); transition: 0.6s;">
+                <div class="service-card fade-in">
                     <div class="service-icon">☁️</div>
                     <h3>Cloud Computing Solutions</h3>
                     <p>Scalable cloud infrastructure and migration services to enhance your business agility, reduce costs, and improve performance.</p>
                 </div>
-                <div class="service-card fade-in" style="opacity: 1; transform: translateY(0px); transition: 0.6s;">
+                <div class="service-card fade-in">
                     <div class="service-icon">🔄</div>
                     <h3>Digital Transformation Consulting</h3>
                     <p>Strategic guidance to modernize your business processes, adopt new technologies, and stay competitive in the digital landscape.</p>
                 </div>
-                <div class="service-card fade-in" style="opacity: 1; transform: translateY(0px); transition: 0.6s;">
+                <div class="service-card fade-in">
                     <div class="service-icon">📊</div>
                     <h3>Data Analytics</h3>
                     <p>Transform your data into actionable insights with advanced analytics solutions that drive informed decision-making and business growth.</p>
@@ -530,7 +592,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="about-visual">
+                <div class="about-visual" aria-hidden="true">
                     <div style="z-index: 2; position: relative;">🌟</div>
                 </div>
             </div>
@@ -546,10 +608,10 @@
             </div>
             <div class="footer-section">
                 <h3>Services</h3>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#services">Custom Software Development</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#services">Cloud Computing Solutions</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#services">Digital Transformation</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#services">Data Analytics</a></p>
+                <p><a href="#services">Custom Software Development</a></p>
+                <p><a href="#services">Cloud Computing Solutions</a></p>
+                <p><a href="#services">Digital Transformation</a></p>
+                <p><a href="#services">Data Analytics</a></p>
             </div>
             <div class="footer-section">
                 <h3>Contact Info</h3>
@@ -559,10 +621,10 @@
             </div>
             <div class="footer-section">
                 <h3>Follow Us</h3>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#">LinkedIn</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#">Twitter</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#">Facebook</a></p>
-                <p><a href="https://github.com/galaxyfy-9/galaxyfy9/blob/main/index.html#">Instagram</a></p>
+                <p><a href="https://linkedin.com/company/galaxyfy9" target="_blank">LinkedIn</a></p>
+                <p><a href="https://twitter.com/galaxyfy9" target="_blank">Twitter</a></p>
+                <p><a href="https://facebook.com/galaxyfy9" target="_blank">Facebook</a></p>
+                <p><a href="https://instagram.com/galaxyfy9" target="_blank">Instagram</a></p>
             </div>
         </div>
         <div class="footer-bottom">
@@ -583,6 +645,11 @@
                     });
                 }
             });
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.hamburger').addEventListener('click', () => {
+            document.querySelector('.nav-links').classList.toggle('active');
         });
 
         // Header background on scroll
@@ -641,14 +708,10 @@
                 if (entry.isIntersecting) {
                     const numbers = entry.target.querySelectorAll('.stat-number');
                     numbers.forEach(num => {
-                        const target = num.textContent.includes('+') ? 
-                            parseInt(num.textContent) : 
-                            num.textContent === '24/7' ? null : 
-                            parseInt(num.textContent);
-                        
-                        if (target && typeof target === 'number') {
-                            animateCounter(num, target);
-                        }
+                        const text = num.textContent;
+                        if (text === '24/7' || isNaN(parseInt(text))) return; // Skip non-numeric values
+                        const target = parseInt(text);
+                        animateCounter(num, target);
                     });
                     statsObserver.unobserve(entry.target);
                 }
@@ -660,5 +723,5 @@
             statsObserver.observe(statsSection);
         }
     </script>
-
-</body></html>
+</body>
+</html>
